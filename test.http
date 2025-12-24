@@ -1,0 +1,109 @@
+### ===================================================
+### 1. 用戶模組 (User Module)
+### ===================================================
+
+### A. 建立一個測試用戶 (執行後，ID 會自動被記錄，不用手動填)
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "username": "@tron_final_test",
+  "nickname": "TRON (Final)",
+  "bio": "I fight for the user."
+}
+
+> {%
+    // 這裡的腳本會自動抓取回傳的 ID 並存成全域變數
+    client.global.set("userId", response.body.id);
+    client.log("已自動儲存 User ID: " + response.body.id);
+%}
+
+### B. 查詢所有用戶
+GET http://localhost:8080/api/users
+
+### ===================================================
+### 2. 社群模組 (Social Module)
+### ===================================================
+
+### A. 發布貼文 (使用自動儲存的 {{userId}})
+POST http://localhost:8080/api/posts
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "content": "這是最終整合測試！如果看到這篇文，代表後端系統全通了！ 🚀 #TUITUI #BackendMaster",
+  "locationName": "台北 101",
+  "images": [
+    {
+      "imageUrl": "https://example.com/demo1.jpg",
+      "sortOrder": 0
+    },
+    {
+      "imageUrl": "https://example.com/demo2.jpg",
+      "sortOrder": 1
+    }
+  ]
+}
+
+### B. 查詢所有貼文 (驗證 LazyLoading 修復與圖片顯示)
+GET http://localhost:8080/api/posts
+
+### ===================================================
+### 3. 電商模組 (Commerce Module)
+### ===================================================
+
+### A. 上架第一個商品 (外套) -> 自動存 ID 為 productId_1
+POST http://localhost:8080/api/commerce/products
+Content-Type: application/json
+
+{
+  "name": "韓系質感針織外套",
+  "price": 1280,
+  "description": "秋冬必備，親膚材質",
+  "coverUrl": "https://example.com/coat.jpg"
+}
+
+> {%
+    client.global.set("productId_1", response.body.id);
+    client.log("已自動儲存 商品1 ID: " + response.body.id);
+%}
+
+### B. 上架第二個商品 (牛仔褲) -> 自動存 ID 為 productId_2
+POST http://localhost:8080/api/commerce/products
+Content-Type: application/json
+
+{
+  "name": "高腰修身牛仔褲",
+  "price": 890,
+  "description": "顯瘦神褲",
+  "coverUrl": "https://example.com/jeans.jpg"
+}
+
+> {%
+    client.global.set("productId_2", response.body.id);
+    client.log("已自動儲存 商品2 ID: " + response.body.id);
+%}
+
+### C. 加入購物車 (買 1 件外套)
+POST http://localhost:8080/api/commerce/cart
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "productId": "{{productId_1}}",
+  "quantity": 1
+}
+
+### D. 加入購物車 (買 2 條褲子)
+POST http://localhost:8080/api/commerce/cart
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "productId": "{{productId_2}}",
+  "quantity": 2
+}
+
+### E. 查看我的購物車 (驗證總金額)
+# 預期總金額: 1280*1 + 890*2 = 3060
+GET http://localhost:8080/api/commerce/cart/{{userId}}

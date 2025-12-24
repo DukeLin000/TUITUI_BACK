@@ -1,0 +1,77 @@
+server:
+  port: 8080
+  shutdown: graceful # 優雅停機，K8s 部署時很重要
+
+spring:
+  application:
+    name: shenchuan-tuitui-backend
+
+  # --- Database Configuration (PostgreSQL) ---
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tuitui_db
+    username: postgres     # 請修改為你的本地帳號
+    password: password     # 請修改為你的本地密碼
+    driver-class-name: org.postgresql.Driver
+    # HikariCP 連線池設定 (資深配置)
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+  # --- JPA / Hibernate Configuration ---
+  jpa:
+    # 開發階段用 update，會自動建表；正式環境建議用 validate 或 none (搭配 Flyway/Liquibase)
+    hibernate:
+      ddl-auto: update
+    open-in-view: false # 【關鍵】強烈建議設為 false，避免在 Controller/View 層發生 N+1 查詢問題
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true # 格式化 SQL Log，方便除錯
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # 啟用 JDBC Batch，提升大量寫入效能
+        jdbc:
+          batch_size: 50
+          order_inserts: true
+          order_updates: true
+
+  # --- Redis Configuration (Optional for Phase 1) ---
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
+  # --- DevTools (Hot Swap) ---
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+  # --- Docker Compose Support (因為你勾選了) ---
+  docker:
+    compose:
+      enabled: true
+      file: compose.yaml # 預設會找專案根目錄的 compose.yaml
+
+# --- Logging Strategy ---
+logging:
+  level:
+    root: INFO
+    # 將你的 package 設為 DEBUG，方便看業務邏輯 Log
+    com.shenchuan.tuitui: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # 顯示 SQL 參數綁定值 (?)
+
+# --- Actuator (Health Check) ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
