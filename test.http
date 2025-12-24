@@ -101,7 +101,7 @@ Content-Type: application/json
 {
   "userId": "{{userId}}",
   "productId": "{{productId_2}}",
-  "quantity": 2
+  "quantity": 3
 }
 
 ### E. 查看我的購物車 (驗證總金額)
